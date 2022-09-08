@@ -8,7 +8,7 @@ defmodule GithubWeb.UsersController do
 
   def create(conn, params) do
     with {:ok, %User{} = user} <- Github.create_user(params),
-         {:ok, token, _claims} <- Guardian.encode_and_sign(user) do
+         {:ok, token, _claims} <- Guardian.encode_and_sign(user, %{}, ttl: {15, :seconds}) do
       conn
       |> put_status(:created)
       |> render("create.json", token: token, user: user)
@@ -32,10 +32,19 @@ defmodule GithubWeb.UsersController do
   end
 
   def index(conn, _params) do
-    with {:ok, users} <- Github.get_users() do
+    %Plug.Conn{
+      private: %{
+        guardian_default_token: token,
+        guardian_default_claims: claims
+      }
+    } = conn
+
+    with {:ok, users} <- Github.get_users(),
+         {:ok, %{token: token, claims: _claims}} =
+           GithubWeb.Auth.Guardian.refresh_token(token, claims) do
       conn
       |> put_status(:ok)
-      |> render("list_users.json", users: users)
+      |> render("list_users.json", users: users, token: token)
     end
   end
 end
