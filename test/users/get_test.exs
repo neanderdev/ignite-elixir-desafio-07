@@ -1,7 +1,7 @@
 defmodule Github.Users.GetTest do
   use ExUnit.Case, async: true
 
-  alias Github.Users.Get
+  alias Github.Repos.Get
 
   describe "get/1" do
     setup do
@@ -13,7 +13,7 @@ defmodule Github.Users.GetTest do
     test "when there is valid username, returns repos", %{bypass: bypass} do
       username = "RicardoSantos-99"
 
-      response = Get.user_repos(username)
+      response = Get.repos(username)
 
       expect_response =
         {:ok,
@@ -34,7 +34,7 @@ defmodule Github.Users.GetTest do
     test "when there is invalid username, returns an error", %{bypass: bypass} do
       username = "RicardoSantos-9"
 
-      response = Get.user_repos(username)
+      response = Get.repos(username)
 
       expect_response = {:error, %Github.Error{result: "User not found", status: :not_found}}
 

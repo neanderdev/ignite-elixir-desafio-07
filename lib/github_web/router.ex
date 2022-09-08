@@ -5,10 +5,24 @@ defmodule GithubWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :auth do
+    plug GithubWeb.Auth.Pipeline
+  end
+
+  scope "/api", GithubWeb do
+    pipe_through [:api, :auth]
+
+    get "/users/:id", UsersController, :show
+    get "/users", UsersController, :index
+
+    get "/repos/:username", RepoController, :index
+  end
+
   scope "/api", GithubWeb do
     pipe_through :api
 
-    get "/users/:username", UserController, :index
+    post "/users", UsersController, :create
+    post "/users/login", UsersController, :sign_in
   end
 
   # Enables LiveDashboard only for development
@@ -23,20 +37,7 @@ defmodule GithubWeb.Router do
 
     scope "/" do
       pipe_through [:fetch_session, :protect_from_forgery]
-
       live_dashboard "/dashboard", metrics: GithubWeb.Telemetry
-    end
-  end
-
-  # Enables the Swoosh mailbox preview in development.
-  #
-  # Note that preview only shows emails that were sent by the same
-  # node running the Phoenix server.
-  if Mix.env() == :dev do
-    scope "/dev" do
-      pipe_through [:fetch_session, :protect_from_forgery]
-
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
 end

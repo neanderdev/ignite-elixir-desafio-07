@@ -1,19 +1,41 @@
-defmodule GithubWeb.UserController do
+defmodule GithubWeb.UsersController do
   use GithubWeb, :controller
 
-  def index(conn, %{"username" => username}) do
-    case Github.get_user_by_name(username) do
-      {:ok, repos} ->
-        conn
-        |> put_status(:ok)
-        |> put_view(GithubWeb.UsersView)
-        |> render("users.json", repos: repos)
+  alias Github.User
+  alias GithubWeb.{Auth.Guardian, FallbackController}
 
-      {:error, message} ->
-        conn
-        |> put_status(:bad_request)
-        |> put_view(GithubWeb.ErrorView)
-        |> render("error.json", message: message)
+  action_fallback FallbackController
+
+  def create(conn, params) do
+    with {:ok, %User{} = user} <- Github.create_user(params),
+         {:ok, token, _claims} <- Guardian.encode_and_sign(user) do
+      conn
+      |> put_status(:created)
+      |> render("create.json", token: token, user: user)
+    end
+  end
+
+  def show(conn, %{"id" => id}) do
+    with {:ok, %User{} = user} <- Github.get_user_by_id(id) do
+      conn
+      |> put_status(:ok)
+      |> render("user.json", user: user)
+    end
+  end
+
+  def sign_in(conn, params) do
+    with {:ok, token} <- Guardian.authenticate(params) do
+      conn
+      |> put_status(:ok)
+      |> render("sign_in.json", token: token)
+    end
+  end
+
+  def index(conn, _params) do
+    with {:ok, users} <- Github.get_users() do
+      conn
+      |> put_status(:ok)
+      |> render("list_users.json", users: users)
     end
   end
 end

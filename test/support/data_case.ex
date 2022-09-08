@@ -28,16 +28,13 @@ defmodule Github.DataCase do
   end
 
   setup tags do
-    Github.DataCase.setup_sandbox(tags)
-    :ok
-  end
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Github.Repo)
 
-  @doc """
-  Sets up the sandbox based on the test tags.
-  """
-  def setup_sandbox(tags) do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Github.Repo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+    unless tags[:async] do
+      Ecto.Adapters.SQL.Sandbox.mode(Github.Repo, {:shared, self()})
+    end
+
+    :ok
   end
 
   @doc """

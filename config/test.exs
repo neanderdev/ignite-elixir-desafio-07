@@ -8,23 +8,15 @@ import Config
 config :github, Github.Repo,
   username: "postgres",
   password: "s4020",
-  hostname: "localhost",
   database: "github_test#{System.get_env("MIX_TEST_PARTITION")}",
-  pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  hostname: "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :github, GithubWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "mks573iKmiXI5DLuKbPDCY+JO0xB24IbfGkvXrq/PtAqYjxc3Yp/b74bY8TY48KZ",
+  http: [port: 4002],
   server: false
-
-# In test we don't send emails.
-config :github, Github.Mailer, adapter: Swoosh.Adapters.Test
 
 # Print only warnings and errors during test
 config :logger, level: :warn
-
-# Initialize plugs at runtime for faster test compilation
-config :phoenix, :plug_init_mode, :runtime
